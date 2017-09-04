@@ -1,0 +1,16 @@
+source https://nuget.org/api/v2
+nuget FSharp.Core
+nuget Chessie
+
+clitool Microsoft.DotNet.Watcher.Tools
+
+group Test
+    source https://nuget.org/api/v2
+    framework >= net45, >= netcoreapp20
+    nuget Expecto
+    nuget FsCheck
+
+group Build
+    source https://nuget.org/api/v2
+    nuget FAKE
+    nuget FSharpLint.Fake

@@ -1,0 +1,6 @@
+Microsoft.DotNet.Watcher.Tools
+FSharp.Core
+Chessie
+group Test
+    Expecto
+    FsCheck
