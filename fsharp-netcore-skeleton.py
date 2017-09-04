@@ -160,7 +160,6 @@ def make_project():
     if run_git:
         run_cmd("git init")
         run_cmd("git add *")
-        run_cmd("git add -f .paket/paket.exe")
 
     # OPTIONAL
     # - lint in fake (though done by the Ionide 'IDE' plugin) https://github.com/fsprojects/FSharpLint/blob/master/docs/content/FAKE-Task.md

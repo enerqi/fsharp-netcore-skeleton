@@ -11,7 +11,7 @@ What this does:
 - Creates a library (classlib) or executable (console).
 - If it's a console application then we can enable the FAKE build task `RunWatch` to watch the file system for changes and build/run tests/executable on each source file change - just do `build.cmd RunWatch`.
 - Automatically runs the first `paket install` to get the initial dependencies
-- Runs `git init` and adds all the files along with the only ignored file `.paket/paket.exe`
+- Runs `git init` and adds all the files
 
 `build.cmd` runs all the build targets (except `RunWatch`). The sample Expecto tests have some initially failing examples that need fixing for the build to be green. Note, if wanting to only watch and re-run tests everytime the
 source changes (and not run an executable), then the VSCode Ionide plugin can do that.
