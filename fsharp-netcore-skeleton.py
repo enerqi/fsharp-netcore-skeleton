@@ -60,7 +60,7 @@ def nuke_tree(directory):
 
 # Project setup
 def copy_file_to_project(template_file_name, new_project_relative_path):
-    shutil.copyfile(join(script_dir, template_file_name),
+    shutil.copyfile(join(script_dir, "resources", template_file_name),
                     join(project_dir, new_project_relative_path))
 
 
