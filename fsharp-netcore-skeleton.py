@@ -75,7 +75,7 @@ def update_fsproj_target_framework(fsproj_path, new_version="netcoreapp2.0"):
 
 
 def run_cmd(cmd):
-    output = str(check_output(cmd), 'utf-8')
+    output = str(check_output(cmd, shell=True), 'utf-8')
     print(output)
     return output
 
@@ -95,8 +95,8 @@ def add_test_run_msbuild_watch_target():
     # the application - if it is a server process for example.
 
     fsproj_dom = minidom.parse("test/{}".format(test_fsproj))
-    projectNode = fsproj_dom.firstChild
-    assert projectNode.nodeName == 'Project'
+    project_node = fsproj_dom.firstChild
+    assert project_node.nodeName == 'Project'
     target = fsproj_dom.createElement("Target")
     target.setAttribute("Name", "TestAndRun")
     execRunServerTest = fsproj_dom.createElement("Exec")
@@ -108,7 +108,7 @@ def add_test_run_msbuild_watch_target():
         execRunServerExecutable.setAttribute("Command", "dotnet run")
         execRunServerExecutable.setAttribute("WorkingDirectory", "../src/")
         target.appendChild(execRunServerExecutable)
-    projectNode.appendChild(target)
+    project_node.appendChild(target)
 
     new_dom_text = fsproj_dom.toprettyxml()
     open("test/{}".format(test_fsproj), "w").write(new_dom_text)
@@ -120,14 +120,36 @@ def add_test_run_msbuild_watch_target():
         open("build.fsx", "w").write(build_fsx)
 
 
+def patch_expecto_template():
+    # Deal with `dotnet restore` failing with wildcards in version numbers (presumably a bug)
+    fsproj_dom = minidom.parse("test/{}".format(test_fsproj))
+    project_node = fsproj_dom.firstChild
+    refs = project_node.getElementsByTagName("PackageReference")
+    for package_ref in (r for r in refs if r.hasAttribute("Include")):
+        package_name = package_ref.getAttribute("Include")
+        if "Expecto" == package_name:
+            package_ref.setAttribute("Version", "5.0.1")
+            break
+
+    # Update dotnet watcher version
+    cli_refs = project_node.getElementsByTagName("DotNetCliToolReference")
+    for cli_ref in (cr for cr in cli_refs if cr.hasAttribute("Include")):
+        tool_name = cli_ref.getAttribute("Include")
+        if "Microsoft.DotNet.Watcher.Tools" == tool_name:
+            cli_ref.setAttribute("Version", "2.0.0")
+
+    new_dom_text = fsproj_dom.toprettyxml()
+    open("test/{}".format(test_fsproj), "w").write(new_dom_text)
+
+
 def make_project():
     mkdir(project_dir)
     os.chdir(project_dir)
 
     project_template = "classlib" if is_classlib else "console"
-    run_cmd("dotnet new {} --language F# --output src --name {}".format(project_template, project_name))
+    run_cmd('dotnet new {} --language "F#" --output src --name {}'.format(project_template, project_name))
     if "expecto" not in run_cmd("dotnet new -l"):
-        run_cmd("dotnet new -i Expecto.Template::*")
+        run_cmd("dotnet new -i 'Expecto.Template::*'")
     run_cmd("dotnet new expecto --output test --name {}".format(test_project_name))
     run_cmd("dotnet new sln")
     run_cmd("dotnet sln add src/" + src_fsproj)
@@ -135,6 +157,8 @@ def make_project():
 
     update_fsproj_target_framework(join("test", test_fsproj))
     run_cmd("dotnet add test/{} reference src/{}".format(test_fsproj, src_fsproj))
+
+    patch_expecto_template()
 
     mkdir(join(project_dir, ".paket"))
     copy_file_to_project("paket.bootstrapper.exe", ".paket/paket.exe")
@@ -148,6 +172,7 @@ def make_project():
     add_test_fsproj_package_reference("FsCheck")
 
     copy_file_to_project("build.sh", "build.sh")
+    os.chmod("build.sh", 0o775)
     copy_file_to_project("build.cmd", "build.cmd")
     copy_file_to_project("build.fsx", "build.fsx")
     add_test_run_msbuild_watch_target()
@@ -158,12 +183,13 @@ def make_project():
     touch_project_file("README.md")
     open(join(project_dir, "README.md"), "w").write("# " + project_name)
 
+    os.chmod(".paket/paket.exe", 0o775)
     run_cmd(".paket/paket.exe install")
     run_cmd(".paket/paket.exe auto-restore on")
 
     if run_git:
         run_cmd("git init")
-        run_cmd("git add *")
+        run_cmd('git add "*"')
 
     # OPTIONAL
     # - lint in fake (though done by the Ionide 'IDE' plugin) https://github.com/fsprojects/FSharpLint/blob/master/docs/content/FAKE-Task.md
