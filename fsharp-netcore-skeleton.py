@@ -75,7 +75,9 @@ def update_fsproj_target_framework(fsproj_path, new_version="netcoreapp2.0"):
 
 
 def run_cmd(cmd):
-    print(str(check_output(cmd), 'utf-8'))
+    output = str(check_output(cmd), 'utf-8')
+    print(output)
+    return output
 
 
 def add_src_fsproj_package_reference(package_name):
@@ -124,6 +126,8 @@ def make_project():
 
     project_template = "classlib" if is_classlib else "console"
     run_cmd("dotnet new {} --language F# --output src --name {}".format(project_template, project_name))
+    if "expecto" not in run_cmd("dotnet new -l"):
+        run_cmd("dotnet new -i Expecto.Template::*")
     run_cmd("dotnet new expecto --output test --name {}".format(test_project_name))
     run_cmd("dotnet new sln")
     run_cmd("dotnet sln add src/" + src_fsproj)
