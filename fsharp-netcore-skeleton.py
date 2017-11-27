@@ -184,8 +184,8 @@ def make_project():
     open(join(project_dir, "README.md"), "w").write("# " + project_name)
 
     os.chmod(".paket/paket.exe", 0o775)
-    run_cmd(".paket/paket.exe install")
-    run_cmd(".paket/paket.exe auto-restore on")
+    run_cmd(".paket{sep}paket.exe install".format(sep=os.path.sep))
+    run_cmd(".paket{sep}paket.exe auto-restore on".format(sep=os.path.sep))
 
     if run_git:
         run_cmd("git init")
