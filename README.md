@@ -14,7 +14,7 @@ What this does:
 
 The `build.fsx` file should then be tweaked: `project`, `summary` and maybe `dotnetcliVersion` before running `build.cmd`.
 
-`build.cmd` runs the `All` build targets (everything except `RunWatch`). The sample Expecto tests have some initially failing examples that need fixing for the build to be green. Note, if wanting to only watch and re-run tests everytime the source changes (and not run an executable), then the VSCode Ionide plugin can do that.
+`build.cmd` runs the `All` build targets (everything except `RunWatch`) doing a full rebuild. The sample Expecto tests have some initially failing examples that need fixing for the build to be green. Note, if wanting to only watch and re-run tests everytime the source changes (and not run an executable), then the VSCode Ionide plugin can do that.
 
 [Project Scaffold](https://github.com/fsprojects/ProjectScaffold) is currently a better alternative if using the non-crossplatform .net framework. This skeleton is single project + test project only.
 

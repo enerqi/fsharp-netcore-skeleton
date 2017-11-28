@@ -1,18 +1,21 @@
-framework: auto-detect
-// Do not extract into the "packages" folder but use a globally shared directory
-storage: none
 source https://nuget.org/api/v2
+framework: auto-detect
+storage: none
+
 nuget FSharp.Core
 nuget Chessie
 
 clitool Microsoft.DotNet.Watcher.Tools
 
 group Test
+    framework: auto-detect
     source https://nuget.org/api/v2
+    storage: none
     nuget Expecto
     nuget FsCheck
 
 group Build
+    framework: auto-detect
     source https://nuget.org/api/v2
     nuget FAKE
     nuget FSharpLint.Fake
