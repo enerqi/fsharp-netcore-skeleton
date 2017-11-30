@@ -1,16 +1,23 @@
 
 # FSharp Netcore Skeleton
 
-Utility for creating an F# project using dotnet core 2.0 with:
+Utility for creating an F# solution/workspace using dotnet core 2.0 with:
 - [Expecto](https://github.com/haf/expecto) tests
 - [Paket](https://fsprojects.github.io/Paket/) for dependency management
 - [FAKE](https://fake.build/) for builds.
 
-What this does:
+Multi project setup:
+- Creates a solution
 - Creates a library (classlib) or executable (console).
 - If it's a console application then we can enable the FAKE build task `RunWatch` to watch the file system for changes and build/run tests/executable on each source file change - just do `build.cmd RunWatch`.
 - Automatically runs the first `paket install` to get the initial dependencies
 - Runs `git init` and adds all the files
+
+Simple setup:
+- No solution
+- The single project setup creates a a library (classlib) or executable (console) project, but NO test project.
+- The single project setup uses Paket for dependencies and Fake for builds.
+- The `--no-build` option is a single project without Fake builds, but still using Paket.
 
 The `build.fsx` file should then be tweaked: `project`, `summary` and maybe `dotnetcliVersion` before running `build.cmd`.
 
@@ -20,8 +27,7 @@ The `build.fsx` file should then be tweaked: `project`, `summary` and maybe `dot
 
 [Forge](http://forge.run/) may do some or all of the work of this skeleton, but it is currently also not dotnet core.
 
-[Fable-Suave](https://github.com/fable-compiler/fable-suave-scaffold) is a good example of a combined client/server
-project similar to this skeleton.
+[SAFE-Stack bookstore](https://github.com/SAFE-Stack/SAFE-BookStore) project is a good example of a combined client/server project similar to this skeleton using the Fable F# to JS compiler for the frontend.
 
 ## Usage
 
