@@ -1,0 +1,6 @@
+source https://nuget.org/api/v2
+framework: auto-detect
+storage: none
+
+nuget FSharp.Core
+nuget Chessie

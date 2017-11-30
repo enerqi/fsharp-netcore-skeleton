@@ -1,7 +1,8 @@
-"""Netcore Skeleton.
+"""Netcore Skeleton. Create an F# netcore project in a directory with project name.
 
 Usage:
-    fsharp-netcore-skeleton <project_name> (--console [--watcher] | --classlib) [--force] [--nogit]
+    fsharp-netcore-skeleton <project_name_or_path> (--console [--watcher] | --classlib)
+    [--force] [--nogit] [--single-project] [--no-build]
 
 Options:
     --console   make an executable type project.
@@ -9,6 +10,8 @@ Options:
     --watcher   add a dotnet watcher to run the test and executable on code change. Console applications only.
     --force     try to run this skeleton script even though the project directory already exists. May fail horribly.
     --nogit     do not git init and git add
+    --single-project  one project only (no test project), no solution
+    --no-build  do not include a build script (do everything manually with dotnet/paket commands). Implies --single-project.
 """
 
 from docopt import docopt
@@ -22,20 +25,29 @@ import xml.dom.minidom as minidom
 arguments = docopt(__doc__)
 
 # Inputs
-project_name = arguments['<project_name>']
+project_name_or_path = arguments['<project_name_or_path>']
+if "/" in project_name_or_path or os.path.sep in project_name_or_path:
+    project_name = os.path.split(project_name_or_path)[-1]
+    is_project_path = True
+else:
+    project_name = project_name_or_path
+    is_project_path = False
 is_classlib = arguments['--classlib']
 watcher = arguments['--watcher']
 run_git = not arguments['--nogit']
+single_project = arguments['--single-project']
+require_test_project = not single_project
+no_build = arguments['--no-build'] and single_project
 test_project_name = project_name + "Test"
 pwd = os.getcwd()
-project_dir = join(pwd, project_name)
+project_dir = join(pwd, project_name) if not is_project_path else project_name_or_path
 dir_already_existed = os.path.exists(project_dir)
 script_dir = os.path.dirname(os.path.realpath(__file__))
 src_fsproj = "{}.fsproj".format(project_name)
 test_fsproj = "{}.fsproj".format(test_project_name)
 
 if dir_already_existed and not arguments['--force']:
-    print("Project directory already exists - remove and try again")
+    print("Project directory already exists - remove and try again or use --force")
     sys.exit(1)
 
 
@@ -148,34 +160,49 @@ def make_project():
 
     project_template = "classlib" if is_classlib else "console"
     run_cmd('dotnet new {} --language "F#" --output src --name {}'.format(project_template, project_name))
-    if "expecto" not in run_cmd("dotnet new -l"):
-        run_cmd("dotnet new -i 'Expecto.Template::*'")
-    run_cmd("dotnet new expecto --output test --name {}".format(test_project_name))
-    run_cmd("dotnet new sln")
-    run_cmd("dotnet sln add src/" + src_fsproj)
-    run_cmd("dotnet sln add test/" + test_fsproj)
 
-    update_fsproj_target_framework(join("test", test_fsproj))
-    run_cmd("dotnet add test/{} reference src/{}".format(test_fsproj, src_fsproj))
+    if require_test_project:
+        if "expecto" not in run_cmd("dotnet new -l"):
+            run_cmd("dotnet new -i 'Expecto.Template::*'")
+        run_cmd("dotnet new expecto --output test --name {}".format(test_project_name))
+        run_cmd("dotnet new sln")
+        run_cmd("dotnet sln add src/" + src_fsproj)
+        run_cmd("dotnet sln add test/" + test_fsproj)
 
-    patch_expecto_template()
+        update_fsproj_target_framework(join("test", test_fsproj))
+        run_cmd("dotnet add test/{} reference src/{}".format(test_fsproj, src_fsproj))
+
+        patch_expecto_template()
 
     mkdir(join(project_dir, ".paket"))
     copy_file_to_project("paket.bootstrapper.exe", ".paket/paket.exe")
-    copy_file_to_project("paket.dependencies", "paket.dependencies")
     copy_file_to_project("src-paket-references", "src/paket.references")
-    copy_file_to_project("test-paket-references", "test/paket.references")
-    copy_file_to_project("NuGet.config", "NuGet.config")
+    if require_test_project:
+        copy_file_to_project("paket.dependencies", "paket.dependencies")
+        copy_file_to_project("test-paket-references", "test/paket.references")
+    elif no_build:
+        copy_file_to_project("no-build-paket.dependencies", "paket.dependencies")
+    else:
+        copy_file_to_project("single-project-paket.dependencies", "paket.dependencies")
+
+    if require_test_project:
+        # no solution so don't need this
+        copy_file_to_project("NuGet.config", "NuGet.config")
 
     add_src_fsproj_package_reference("Chessie")
-    add_test_fsproj_package_reference("Chessie")
-    add_test_fsproj_package_reference("FsCheck")
+    if require_test_project:
+        add_test_fsproj_package_reference("Chessie")
+        add_test_fsproj_package_reference("FsCheck")
 
-    copy_file_to_project("build.sh", "build.sh")
-    os.chmod("build.sh", 0o775)
-    copy_file_to_project("build.cmd", "build.cmd")
-    copy_file_to_project("build.fsx", "build.fsx")
-    add_test_run_msbuild_watch_target()
+    if not no_build:
+        copy_file_to_project("build.sh", "build.sh")
+        os.chmod("build.sh", 0o775)
+        copy_file_to_project("build.cmd", "build.cmd")
+        if require_test_project:
+            copy_file_to_project("build.fsx", "build.fsx")
+            add_test_run_msbuild_watch_target()
+        else:
+            copy_file_to_project("single-project-build.fsx", "build.fsx")
 
     copy_file_to_project("fsharp-gitattributes", ".gitattributes")
     copy_file_to_project("fsharp-gitignore", ".gitignore")
