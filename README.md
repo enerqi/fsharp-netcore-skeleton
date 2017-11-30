@@ -25,8 +25,17 @@ might as well just use `paket` or the `dotnet` cli directly along with `.fsx` in
 - Requires [dotnet sdk](https://www.microsoft.com/net/download/)
 
 ```bash
-cd /path/to/project/parent/
-python /path/to/fsharp-netcore-skeleton.py FooProject --console --watcher
+# Create solution 'FooProject' in a subfolder of the working directory
+python3 fsharp-netcore-skeleton.py FooProject --console --watcher
+
+# Create a solution 'FooProject' in a specific directory
+python3 fsharp-netcore-skeleton.py ~/dev/FooProject --console --watcher
+
+# Create a solution 'FooProject' in a specific directory and overwrite files as needed
+python3 fsharp-netcore-skeleton.py ~/dev/FooProject --classlib --force
+
+# Create a single project 'FooProject' with no solution and don't initialise git
+python3 fsharp-netcore-skeleton.py ~/dev/FooProject --console --single-project --nogit
 ```
 
 The options are documented through [DocOpt](http://docopt.org).
